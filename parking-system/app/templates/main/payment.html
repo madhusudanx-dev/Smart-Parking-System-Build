@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Payment · Smart Parking{% endblock %}
+
+{% block content %}
+<div class="auth-shell" style="align-items:flex-start; padding-top: var(--s-7);">
+  <div class="glass" style="max-width: 560px; width:100%;">
+
+    <span class="badge badge-available" style="margin-bottom: var(--s-3);">
+      {{ icon('shield-check', 13) }} Demo payment
+    </span>
+    <h1>Pay for {{ booking.reference }}</h1>
+    <p class="muted">
+      This is a simulated checkout for the BCA demo. No real money moves.
+    </p>
+
+    <div class="glass-panel" style="padding: var(--s-4); margin: var(--s-4) 0;">
+      <div class="row-between"><span class="muted">Slot</span><strong>{{ booking.slot_code }} &middot; {{ booking.level_name }}</strong></div>
+      <div class="row-between" style="margin-top:6px;"><span class="muted">Vehicle</span><span class="tabular">{{ booking.vehicle_plate }}</span></div>
+      <div class="row-between" style="margin-top:6px;"><span class="muted">From</span><span class="tabular">{{ booking.start_ts|dt }}</span></div>
+      <div class="row-between" style="margin-top:6px;"><span class="muted">Until</span><span class="tabular">{{ booking.end_ts|dt }}</span></div>
+      {% if booking.charging_addon %}
+      <div class="row-between" style="margin-top:6px;"><span class="muted">Charging</span><span>{{ booking.charger_type|upper }} add-on</span></div>
+      {% endif %}
+      <hr class="divider" />
+      <div class="row-between">
+        <strong>Amount due</strong>
+        <strong class="tabular" style="font-size:22px; color: var(--primary);">{{ booking.amount_estimate|inr }}</strong>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('main.payment', booking_id=booking.id) }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+
+      <label class="check" style="display:flex; gap:12px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.4); margin-bottom:10px;">
+        <input type="radio" name="method" value="upi" checked />
+        <span style="display:flex; gap:10px; align-items:center;">{{ icon('smartphone', 18) }} <strong>UPI</strong> <span class="muted">Google Pay, PhonePe, Paytm</span></span>
+      </label>
+      <label class="check" style="display:flex; gap:12px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.4); margin-bottom:10px;">
+        <input type="radio" name="method" value="card" />
+        <span style="display:flex; gap:10px; align-items:center;">{{ icon('credit-card', 18) }} <strong>Card</strong> <span class="muted">Visa, Mastercard, RuPay</span></span>
+      </label>
+      <label class="check" style="display:flex; gap:12px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.4);">
+        <input type="radio" name="method" value="exit" />
+        <span style="display:flex; gap:10px; align-items:center;">{{ icon('wallet', 18) }} <strong>Pay at exit</strong> <span class="muted">Settle at the boom barrier</span></span>
+      </label>
+
+      <button class="btn btn-primary btn-block" type="submit" style="margin-top: var(--s-5);">
+        {{ icon('lock', 16) if false else icon('shield-check', 16) }}
+        Confirm payment of {{ booking.amount_estimate|inr }}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

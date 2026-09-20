@@ -1,0 +1,53 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}EV charging{% endblock %}
+
+{% block admin_content %}
+<h1>EV charging stations</h1>
+<p class="muted">Six bays across Ground and Basement 1. AC and DC options.</p>
+
+<h2 style="margin-top: var(--s-5);">Bays</h2>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Bay</th><th>Level</th><th>Vehicle</th><th>Status</th><th>Note</th></tr></thead>
+    <tbody>
+      {% for b in bays %}
+        <tr>
+          <td><strong>{{ b.code }}</strong></td>
+          <td class="muted">{{ b.level_code }}</td>
+          <td class="muted">{{ b.vehicle_type }}</td>
+          <td>
+            {% if b.status == 'available' %}<span class="badge badge-ev">{{ icon('zap', 13) }} Free</span>
+            {% elif b.status == 'occupied' %}<span class="badge badge-occupied">Charging</span>
+            {% else %}<span class="badge badge-disabled">{{ b.status|title }}</span>{% endif %}
+          </td>
+          <td class="muted">{{ b.note or '—' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 style="margin-top: var(--s-7);">Recent charging sessions</h2>
+{% if sessions %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Bay</th><th>Charger</th><th>Started</th><th>Ended</th><th>kWh</th><th>Amount</th></tr></thead>
+      <tbody>
+        {% for s in sessions %}
+          <tr>
+            <td>{{ s.slot_code }}</td>
+            <td><span class="badge badge-ev">{{ s.charger_type|upper }}</span></td>
+            <td class="tabular muted">{{ s.start_ts|dt("%d %b, %I:%M %p") }}</td>
+            <td class="tabular muted">{{ s.end_ts|dt("%d %b, %I:%M %p") if s.end_ts else '—' }}</td>
+            <td class="tabular">{{ '%.2f'|format(s.kwh) }}</td>
+            <td class="tabular">{{ s.amount|inr }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="glass empty"><h3>No charging sessions yet</h3><p>They will show up here as EV drivers use the bays.</p></div>
+{% endif %}
+{% endblock %}

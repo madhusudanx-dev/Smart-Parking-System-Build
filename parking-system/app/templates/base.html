@@ -1,0 +1,66 @@
+{# =========================================================================
+   Base layout: aurora background (blobs + film grain), floating navbar,
+   flash banner, toast stack, footer.  Every page extends this.
+   ========================================================================= #}
+{% from "macros.html" import flash_messages, icon %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#F4F6F5" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <title>{% block title %}Smart Parking Slot System{% endblock %}</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap grid + utilities only (all components are restyled). -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" rel="stylesheet" />
+
+  <!-- Our tokens first, then the stylesheet that consumes them. -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+  <!-- ============================ BACKGROUND ============================ -->
+  <div class="aurora-bg {% block blob_intensity %}{% endblock %}" aria-hidden="true">
+    <div class="blob indigo"></div>
+    <div class="blob orchid"></div>
+    <div class="blob lavender"></div>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ============================ NAVBAR ================================ -->
+  {% block navbar %}
+    {% include "_navbar.html" %}
+  {% endblock %}
+
+  <!-- ============================ CONTENT =============================== -->
+  <main class="shell" id="main">
+    {{ flash_messages() }}
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ============================ FOOTER ================================ -->
+  {% block footer %}
+    <footer style="max-width:1180px; margin: 0 auto; padding: 0 var(--s-5) var(--s-6);
+                   color: var(--muted); font-size: 13px; text-align:center;">
+      Smart Parking Slot System &middot; BCA final-year project demo &middot; Prices in INR
+    </footer>
+  {% endblock %}
+
+  <!-- ============================ TOASTS ================================ -->
+  <div class="toast-stack" aria-live="polite"></div>
+
+  <!-- ============================ SCRIPTS =============================== -->
+  <script src="{{ url_for('static', filename='js/icons.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

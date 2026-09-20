@@ -1,0 +1,34 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}All bookings{% endblock %}
+
+{% block admin_content %}
+<h1>Bookings</h1>
+<p class="muted">The last 200 reservations, most recent first.</p>
+
+<div class="table-wrap" style="margin-top: var(--s-5);">
+  <table class="table">
+    <thead>
+      <tr><th>Ref</th><th>User</th><th>Slot</th><th>Vehicle</th><th>Window</th><th>Amount</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for b in bookings %}
+        <tr>
+          <td class="tabular"><strong>{{ b.reference }}</strong></td>
+          <td>{{ b.user_name }}</td>
+          <td>{{ b.slot_code }} <span class="muted">&middot; {{ b.level_code }}</span></td>
+          <td class="tabular">{{ b.vehicle_plate }}</td>
+          <td class="tabular muted">{{ b.start_ts|dt("%d %b, %I:%M %p") }} &rarr; {{ b.end_ts|dt("%I:%M %p") }}</td>
+          <td class="tabular">{{ b.amount_estimate|inr }}</td>
+          <td>
+            {% if b.status == 'booked' %}<span class="badge badge-reserved">Booked</span>
+            {% elif b.status == 'active' %}<span class="badge badge-occupied">Active</span>
+            {% elif b.status == 'completed' %}<span class="badge badge-available">Completed</span>
+            {% else %}<span class="badge badge-disabled">Cancelled</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Smart Parking Slot System{% endblock %}
+
+{% block content %}
+<section style="display:grid; grid-template-columns: 1.05fr 0.95fr; gap: var(--s-7); align-items:center; padding: var(--s-6) 0 var(--s-8);">
+  <div>
+    <span class="badge badge-available" style="margin-bottom: var(--s-4);">
+      {{ icon('map-pin', 13) }} Prestige Aurora &middot; Lavelle Road
+    </span>
+    <h1 style="font-size: 44px; line-height:1.1; letter-spacing:-0.03em; margin-bottom: var(--s-4);">
+      A calm, guaranteed spot <br>before you reach the gate.
+    </h1>
+    <p class="muted" style="font-size:17px; max-width: 52ch;">
+      Reserve a bay in advance, pay in seconds, and walk to your car with a
+      written hint if you forget where you parked. EV charging and Women&rsquo;s
+      Safety bays are covered by CCTV near the entrance.
+    </p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: var(--s-5);">
+      {% if current_user %}
+        <a class="btn btn-primary" href="{{ url_for('main.book') }}">{{ icon('calendar', 18) }} Reserve a slot</a>
+        <a class="btn btn-ghost"   href="{{ url_for('main.my_bookings') }}">{{ icon('list', 18) }} My bookings</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">{{ icon('calendar', 18) }} Create an account</a>
+        <a class="btn btn-ghost"   href="{{ url_for('auth.login') }}">{{ icon('log-in', 18) }} Sign in</a>
+      {% endif %}
+      <a class="btn btn-ghost" href="{{ url_for('main.availability_public') }}">{{ icon('eye', 18) }} Live availability</a>
+    </div>
+  </div>
+
+  <aside class="glass" style="padding: var(--s-6);">
+    <div class="row-between" style="margin-bottom: var(--s-4);">
+      <h2 style="margin:0; font-size:18px;">Right now at this lot</h2>
+      <span class="badge badge-available">{{ icon('check-circle-2', 13) }} Live</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="glass-panel" style="padding: var(--s-4);">
+        <div class="muted" style="font-size:13px;">Available</div>
+        <div class="tabular" style="font-size:34px; font-weight:700; color: var(--slot-available-ink);">{{ available }}</div>
+      </div>
+      <div class="glass-panel" style="padding: var(--s-4);">
+        <div class="muted" style="font-size:13px;">Occupied</div>
+        <div class="tabular" style="font-size:34px; font-weight:700; color: var(--slot-occupied-ink);">{{ occupied }}</div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <ul style="list-style:none; padding:0; margin:0; display:grid; gap:12px;">
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span class="badge badge-ev">{{ icon('zap', 13) }} EV</span>
+        <span class="muted" style="font-size:15px;">6 bays with AC or DC charging, billed by the hour.</span>
+      </li>
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span class="badge badge-women">{{ icon('shield-check', 13) }} Women&rsquo;s Safety</span>
+        <span class="muted" style="font-size:15px;">6 bays near the security cabin, CCTV covered, with an SOS button.</span>
+      </li>
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span class="badge badge-available">{{ icon('ticket', 13) }} QR ticket</span>
+        <span class="muted" style="font-size:15px;">Show the QR at the gate. No app download needed.</span>
+      </li>
+    </ul>
+  </aside>
+</section>
+
+<style>@media (max-width: 900px){section[style*="grid-template-columns: 1.05fr"]{grid-template-columns:1fr !important;}}</style>
+{% endblock %}

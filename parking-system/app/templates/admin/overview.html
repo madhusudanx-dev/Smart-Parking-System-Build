@@ -1,0 +1,98 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Admin overview{% endblock %}
+
+{% block admin_content %}
+<h1>Overview</h1>
+<p class="muted">Today at Prestige Aurora Parking.</p>
+
+<div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); margin: var(--s-5) 0;">
+  {% set cards = [
+    ('Occupied now',  totals.occupied or 0, 'car',           'var(--slot-occupied-ink)'),
+    ('Entries today', entries_today,        'log-in',        'var(--slot-available-ink)'),
+    ('Exits today',   exits_today,          'log-out',       'var(--muted)'),
+    ('Revenue today', revenue_today|inr,    'wallet',        'var(--primary)'),
+  ] %}
+  {% for label, value, ico, colour in cards %}
+    <div class="glass" style="padding: var(--s-4);">
+      <div class="muted" style="font-size:13px; display:flex; align-items:center; gap:8px;">
+        {{ icon(ico, 14) }} {{ label }}
+      </div>
+      <div class="tabular" style="font-size:26px; font-weight:700; color: {{ colour }}; margin-top:6px;">{{ value }}</div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if open_sos %}
+<a class="flash err" style="text-decoration:none; display:flex;" href="{{ url_for('admin.women_safety') }}">
+  {{ icon('siren', 18) }}
+  <span><strong>{{ open_sos }} open SOS alert{{ 's' if open_sos != 1 else '' }}</strong> — tap to review.</span>
+</a>
+{% endif %}
+
+<div style="display:grid; grid-template-columns: 1.5fr 1fr; gap: var(--s-5); margin-top: var(--s-5);">
+  <div class="glass" style="padding: var(--s-5);">
+    <h2 style="margin-top:0;">Revenue, last 7 days</h2>
+    <canvas id="revChart" height="140" aria-label="Revenue chart for the past 7 days"></canvas>
+  </div>
+
+  <div class="glass" style="padding: var(--s-5);">
+    <h2 style="margin-top:0;">By slot type</h2>
+    <div style="display:grid; gap:10px;">
+      {% for label, value, total, cls in [
+        ('Standard',  totals.std,   totals.total, 'badge'),
+        ('EV',        totals.ev,    totals.total, 'badge-ev'),
+        ("Women's Safety", totals.women, totals.total, 'badge-women')
+      ] %}
+        <div>
+          <div class="row-between" style="font-size:14px;">
+            <span class="badge {{ cls }}">{{ label }}</span>
+            <span class="tabular muted">{{ value or 0 }} of {{ total or 0 }}</span>
+          </div>
+          <div style="height:8px; background: rgba(255,255,255,0.5); border-radius: 8px; margin-top:6px; overflow:hidden;">
+            {% set pct = ((value or 0) / (total or 1) * 100) %}
+            <div style="height:100%; width: {{ pct }}%; background: var(--primary); opacity: 0.75;"></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>@media (max-width: 1100px){div[style*="grid-template-columns: repeat(4, 1fr)"]{grid-template-columns:repeat(2, 1fr) !important;}}</style>
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var ctx = document.getElementById('revChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ series|map(attribute='day')|list|tojson }},
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: {{ series|map(attribute='revenue')|list|tojson }},
+        borderColor: '#0B1057',
+        backgroundColor: 'rgba(143,156,255,0.18)',
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: true,
+        pointRadius: 4,
+        pointBackgroundColor: '#0B1057'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display:false }, ticks: { color: '#6B7280' } },
+        y: { grid: { color: 'rgba(45,54,64,0.06)' }, ticks: { color: '#6B7280' } }
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

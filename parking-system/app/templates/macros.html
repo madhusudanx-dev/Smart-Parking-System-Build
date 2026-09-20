@@ -1,0 +1,63 @@
+{# =========================================================================
+   Reusable Jinja macros.  Import them at the top of any template:
+       {% from "macros.html" import icon, slot_badge, flash_messages %}
+   ========================================================================= #}
+
+{# --- Inline Lucide icons ------------------------------------------------ #}
+{% macro icon(name, size=18, cls="") -%}
+  <i data-lucide="{{ name }}" data-size="{{ size }}"{% if cls %} class="{{ cls }}"{% endif %} aria-hidden="true"></i>
+{%- endmacro %}
+
+{# --- Flash messages ----------------------------------------------------- #}
+{% macro flash_messages() -%}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}" role="status">
+          {{ icon('info' if category != 'err' else 'alert-circle', 18) }}
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+{%- endmacro %}
+
+{# --- Slot status badge -------------------------------------------------- #}
+{% macro slot_badge(status) -%}
+  {% if status == 'available' %}
+    <span class="badge badge-available">{{ icon('check-circle-2', 13) }} Available</span>
+  {% elif status == 'occupied' %}
+    <span class="badge badge-occupied">{{ icon('car', 13) }} Occupied</span>
+  {% elif status == 'reserved' %}
+    <span class="badge badge-reserved">{{ icon('clock-4', 13) }} Reserved</span>
+  {% elif status == 'disabled' %}
+    <span class="badge badge-disabled">{{ icon('ban', 13) }} Disabled</span>
+  {% endif %}
+{%- endmacro %}
+
+{# --- Slot type badge ---------------------------------------------------- #}
+{% macro slot_type_badge(slot_type) -%}
+  {% if slot_type == 'ev' %}
+    <span class="badge badge-ev">{{ icon('zap', 13) }} EV Charging</span>
+  {% elif slot_type == 'women' %}
+    <span class="badge badge-women">{{ icon('shield-check', 13) }} Women's Safety</span>
+  {% else %}
+    <span class="badge">{{ icon('square-parking', 13) }} Standard</span>
+  {% endif %}
+{%- endmacro %}
+
+{# --- Page header -------------------------------------------------------- #}
+{% macro page_header(title, subtitle=None) -%}
+  <header class="page-head" style="margin-bottom: var(--s-5);">
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p class="muted" style="margin:0; max-width: 62ch;">{{ subtitle }}</p>{% endif %}
+  </header>
+{%- endmacro %}
+
+{# --- Small icon-only button -------------------------------------------- #}
+{% macro icon_button(icon_name, label, extra_class="") -%}
+  <button type="button"
+          class="btn-icon {{ extra_class }}"
+          aria-label="{{ label }}"
+          title="{{ label }}">{{ icon(icon_name, 18) }}</button>
+{%- endmacro %}

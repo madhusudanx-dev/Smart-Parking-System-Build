@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon, page_header, floorplan_macro if false else icon %}
+{% from "main/_floorplan.html" import floorplan %}
+{% block title %}Live availability · Smart Parking{% endblock %}
+{% block blob_intensity %}subtle{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/floorplan.css') }}" />
+{% endblock %}
+
+{% block content %}
+{{ page_header("Live availability",
+              "Auto-refreshing every 5 seconds. Sign in to reserve a slot.") }}
+
+{{ floorplan(levels, interactive=false, show_filters=true, live=true) }}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/floorplan.js') }}"></script>
+{% endblock %}

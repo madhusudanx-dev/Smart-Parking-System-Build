@@ -1,0 +1,54 @@
+{# Floating frosted-glass navbar.  Active link becomes a frosted pill. #}
+<nav class="navbar-glass" aria-label="Primary">
+  <a class="brand" href="{{ url_for('main.index') }}">
+    {{ icon('square-parking', 22) }}
+    <span>Smart&nbsp;Parking</span>
+  </a>
+
+  <button class="nav-toggle btn-icon" data-nav-toggle aria-label="Menu" aria-expanded="false">
+    {{ icon('menu', 20) }}
+  </button>
+
+  {% if current_user and current_user.role == 'admin' %}
+    <div class="nav-links">
+      <a href="{{ url_for('admin.overview') }}"   class="{{ 'active' if request.endpoint == 'admin.overview' else '' }}">Overview</a>
+      <a href="{{ url_for('admin.slots') }}"      class="{{ 'active' if request.endpoint == 'admin.slots' else '' }}">Slots</a>
+      <a href="{{ url_for('admin.desk') }}"       class="{{ 'active' if request.endpoint == 'admin.desk' else '' }}">Entry / Exit</a>
+      <a href="{{ url_for('admin.bookings') }}"   class="{{ 'active' if request.endpoint == 'admin.bookings' else '' }}">Bookings</a>
+      <a href="{{ url_for('admin.users') }}"      class="{{ 'active' if request.endpoint == 'admin.users' else '' }}">Users</a>
+      <a href="{{ url_for('admin.reports') }}"    class="{{ 'active' if request.endpoint == 'admin.reports' else '' }}">Reports</a>
+    </div>
+    <div class="nav-right">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('main.index') }}">{{ icon('external-link', 15) }} User site</a>
+      <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+        <button class="btn btn-primary btn-sm" type="submit">{{ icon('log-out', 15) }} Sign out</button>
+      </form>
+    </div>
+
+  {% elif current_user %}
+    <div class="nav-links">
+      <a href="{{ url_for('main.index') }}"      class="{{ 'active' if request.endpoint == 'main.index' else '' }}">Home</a>
+      <a href="{{ url_for('main.book') }}"       class="{{ 'active' if request.endpoint == 'main.book' else '' }}">Book a slot</a>
+      <a href="{{ url_for('main.my_bookings') }}" class="{{ 'active' if request.endpoint == 'main.my_bookings' else '' }}">My bookings</a>
+      <a href="{{ url_for('main.where_is_my_car') }}" class="{{ 'active' if request.endpoint == 'main.where_is_my_car' else '' }}">Find my car</a>
+    </div>
+    <div class="nav-right">
+      <span class="muted" style="font-size:14px;">Hi, {{ current_user.name.split(' ')[0] }}</span>
+      <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+        <button class="btn btn-ghost btn-sm" type="submit">{{ icon('log-out', 15) }} Sign out</button>
+      </form>
+    </div>
+
+  {% else %}
+    <div class="nav-links">
+      <a href="{{ url_for('main.index') }}" class="{{ 'active' if request.endpoint == 'main.index' else '' }}">Home</a>
+      <a href="{{ url_for('main.availability_public') }}">Live availability</a>
+    </div>
+    <div class="nav-right">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">Sign in</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Create account</a>
+    </div>
+  {% endif %}
+</nav>

@@ -1,0 +1,40 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Users{% endblock %}
+
+{% block admin_content %}
+<h1>Users</h1>
+<p class="muted">Drivers and staff accounts.</p>
+
+<div class="table-wrap" style="margin-top: var(--s-5);">
+  <table class="table">
+    <thead>
+      <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Bookings</th><th>Women's slots</th><th>Active</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+        <tr>
+          <td><strong>{{ u.name }}</strong></td>
+          <td class="muted">{{ u.email }}</td>
+          <td class="muted tabular">{{ u.phone or '—' }}</td>
+          <td>
+            {% if u.role == 'admin' %}<span class="badge badge-reserved">Admin</span>
+            {% else %}<span class="badge">User</span>{% endif %}
+          </td>
+          <td class="tabular">{{ u.booking_count }}</td>
+          <td>{% if u.wants_women_slots %}<span class="badge badge-women">Opted in</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{% if u.is_active %}<span class="badge badge-available">Active</span>{% else %}<span class="badge badge-disabled">Disabled</span>{% endif %}</td>
+          <td style="text-align:right;">
+            <form method="post" action="{{ url_for('admin.user_toggle', uid=u.id) }}">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+              <button class="btn btn-ghost btn-sm" type="submit">
+                {{ 'Disable' if u.is_active else 'Enable' }}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

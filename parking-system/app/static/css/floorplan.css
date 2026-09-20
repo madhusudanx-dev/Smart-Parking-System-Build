@@ -1,0 +1,110 @@
+/* ===========================================================================
+   Floor-plan map styles. Only loaded on pages that show the map.
+   =========================================================================== */
+
+.floorplan {
+  padding: var(--s-5);
+  margin-top: var(--s-3);
+  overflow: hidden;
+}
+
+.floorplan-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.28);
+  user-select: none;
+}
+
+/* Slot tiles */
+.fp-slot {
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease-out),
+              filter var(--t-fast) var(--ease-out);
+  transform-origin: center;
+}
+.fp-slot .tile {
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 2px 4px rgba(60, 60, 110, 0.08));
+}
+.fp-slot:hover .tile,
+.fp-slot:focus-visible .tile {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 4px 10px rgba(60, 60, 110, 0.18));
+}
+.fp-slot:hover { transform: translateY(-2px); }
+
+.fp-slot .code {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  fill: currentColor;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.fp-slot .type-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  font-weight: 500;
+  fill: currentColor;
+  text-anchor: middle;
+  opacity: 0.75;
+  letter-spacing: 0.05em;
+}
+
+/* State colours */
+.fp-slot.available .tile { fill: var(--slot-available-bg); }
+.fp-slot.available          { color: var(--slot-available-ink); }
+
+.fp-slot.occupied .tile { fill: var(--slot-occupied-bg); }
+.fp-slot.occupied          { color: var(--slot-occupied-ink); }
+
+.fp-slot.reserved .tile { fill: var(--slot-reserved-bg); }
+.fp-slot.reserved          { color: var(--slot-reserved-ink); }
+
+.fp-slot.ev.available .tile { fill: var(--slot-ev-bg); }
+.fp-slot.ev.available          { color: var(--slot-ev-ink); }
+
+.fp-slot.women.available .tile { fill: var(--slot-women-bg); }
+.fp-slot.women.available          { color: var(--slot-women-ink); }
+
+.fp-slot.disabled .tile { fill: var(--slot-disabled-bg); }
+.fp-slot.disabled          { color: var(--slot-disabled-ink); cursor: not-allowed; opacity: 0.65; }
+
+/* Selected + keyboard focus */
+.fp-slot.selected .tile { stroke: var(--primary); stroke-width: 2.5; }
+.fp-slot:focus { outline: none; }
+.fp-slot:focus-visible .tile {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 0 3px rgba(11, 16, 87, 0.28));
+}
+
+/* Dimmed by filter */
+.fp-slot.dim { opacity: 0.18; pointer-events: none; }
+
+/* Legend */
+.floorplan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: var(--s-4);
+  font-size: 13px;
+  color: var(--muted);
+}
+.floorplan-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.floorplan-legend .dot {
+  width: 12px; height: 12px; border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  display: inline-block;
+}
+.floorplan-legend .dot.available { background: var(--slot-available-bg); }
+.floorplan-legend .dot.occupied  { background: var(--slot-occupied-bg);  }
+.floorplan-legend .dot.reserved  { background: var(--slot-reserved-bg);  }
+.floorplan-legend .dot.ev        { background: var(--slot-ev-bg);        }
+.floorplan-legend .dot.women     { background: var(--slot-women-bg);     }
+
+@media (max-width: 640px) {
+  .floorplan { padding: var(--s-4); }
+}

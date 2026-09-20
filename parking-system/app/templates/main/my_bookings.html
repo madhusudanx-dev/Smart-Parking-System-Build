@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon, slot_badge %}
+{% block title %}My bookings · Smart Parking{% endblock %}
+
+{% block content %}
+<div class="row-between">
+  <div>
+    <h1>My bookings</h1>
+    <p class="muted">Upcoming, active and past reservations in one place.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('main.book') }}">{{ icon('plus', 16) }} New booking</a>
+</div>
+
+{% if active %}
+<section style="margin-top: var(--s-6);">
+  <h2 style="margin-bottom: var(--s-3);">Active now</h2>
+  {% for b in active %}
+    <div class="glass" style="padding: var(--s-5); margin-bottom: var(--s-4);">
+      <div class="row-between">
+        <div>
+          <span class="badge badge-occupied" style="margin-bottom:8px;">{{ icon('car', 13) }} In the lot</span>
+          <div class="tabular" style="font-size:20px; font-weight:700;">{{ b.slot_code }} &middot; {{ b.level_code }}</div>
+          <div class="muted">Until {{ b.end_ts|dt }} &middot; {{ b.vehicle_plate }}</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('main.where_is_my_car') }}">{{ icon('map-pin', 14) }} Find my car</a>
+          <a class="btn btn-primary btn-sm" href="{{ url_for('main.ticket', booking_id=b.id) }}">{{ icon('ticket', 14) }} Open ticket</a>
+          <button class="btn btn-sos btn-sm" data-sos-open
+                  data-booking-id="{{ b.id }}" data-slot-id="{{ b.slot_id }}">
+            {{ icon('siren', 14) }} SOS
+          </button>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section style="margin-top: var(--s-6);">
+  <h2 style="margin-bottom: var(--s-3);">Upcoming</h2>
+  {% if upcoming %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Slot</th><th>When</th><th>Vehicle</th><th>Fee</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for b in upcoming %}
+          <tr>
+            <td><strong>{{ b.slot_code }}</strong> <span class="muted">&middot; {{ b.level_code }}</span></td>
+            <td class="tabular">{{ b.start_ts|dt("%d %b, %I:%M %p") }} &rarr; {{ b.end_ts|dt("%I:%M %p") }}</td>
+            <td class="tabular">{{ b.vehicle_plate }}</td>
+            <td class="tabular">{{ b.amount_estimate|inr }}</td>
+            <td>{{ slot_badge('reserved') }}</td>
+            <td style="text-align:right; display:flex; gap:8px; justify-content:flex-end;">
+              <a class="btn btn-ghost btn-sm" href="{{ url_for('main.ticket', booking_id=b.id) }}">Ticket</a>
+              <form method="post" action="{{ url_for('main.cancel_booking', booking_id=b.id) }}"
+                    onsubmit="return confirm('Cancel this booking and free the slot?');">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+                <button class="btn btn-ghost btn-sm" type="submit">Cancel</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="glass empty">
+      {{ icon('calendar', 42) }}
+      <h3>No upcoming bookings</h3>
+      <p>Your next reservation will show up here. Reserve a slot whenever you are ready.</p>
+      <a class="btn btn-primary" href="{{ url_for('main.book') }}">Reserve a slot</a>
+    </div>
+  {% endif %}
+</section>
+
+<section style="margin-top: var(--s-7);">
+  <h2 style="margin-bottom: var(--s-3);">Past</h2>
+  {% if past %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Slot</th><th>When</th><th>Vehicle</th><th>Fee</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for b in past %}
+          <tr>
+            <td><strong>{{ b.slot_code }}</strong></td>
+            <td class="tabular">{{ b.start_ts|dt("%d %b %Y, %I:%M %p") }}</td>
+            <td class="tabular">{{ b.vehicle_plate }}</td>
+            <td class="tabular">{{ b.amount_estimate|inr }}</td>
+            <td>
+              {% if b.status == 'completed' %}<span class="badge badge-available">Completed</span>
+              {% else %}<span class="badge badge-disabled">Cancelled</span>{% endif %}
+            </td>
+            <td style="text-align:right;">
+              <a class="btn btn-ghost btn-sm" href="{{ url_for('main.ticket', booking_id=b.id) }}">Ticket</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="glass empty">
+      {{ icon('history', 42) }}
+      <h3>No past bookings yet</h3>
+      <p>Once you finish a parking session it will appear here.</p>
+    </div>
+  {% endif %}
+</section>
+
+<div class="modal-backdrop" id="sos-modal" role="dialog" aria-modal="true" aria-labelledby="sos-title">
+  <div class="modal">
+    <h2 id="sos-title" style="margin-top:0;">Send an SOS alert?</h2>
+    <p class="muted">Security will see your name, phone and slot within seconds.</p>
+    <form id="sos-form" action="{{ url_for('main.sos') }}" method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+      <input type="hidden" name="slot_id" id="sos-slot-id" value="" />
+      <input type="hidden" name="booking_id" id="sos-booking-id" value="" />
+      <div class="field">
+        <label for="sos-message">Short note <span class="muted" style="font-weight:400;">(optional)</span></label>
+        <textarea class="textarea" id="sos-message" name="message" maxlength="255"></textarea>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn btn-ghost btn-block" onclick="closeModal('sos-modal')">Cancel</button>
+        <button type="button" class="btn btn-sos btn-block" data-sos-send>Send alert</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/sos.js') }}"></script>
+{% endblock %}

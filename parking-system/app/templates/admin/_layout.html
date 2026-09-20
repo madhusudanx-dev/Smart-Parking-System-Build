@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon %}
+{% block blob_intensity %}subtle{% endblock %}
+
+{% block navbar %}
+{# Admin pages use a slim top bar instead of the full floating navbar. #}
+<nav class="navbar-glass" aria-label="Admin">
+  <a class="brand" href="{{ url_for('admin.overview') }}">
+    {{ icon('layout-dashboard', 22) }} <span>Admin</span>
+  </a>
+  <div class="nav-right" style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+    <span class="badge badge-sos" id="sos-counter" style="display:none;">{{ icon('siren', 13) }} <span id="sos-count">0</span> open</span>
+    <span class="muted" style="font-size:14px;">{{ current_user.name }}</span>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('main.index') }}">{{ icon('external-link', 14) }} User site</a>
+    <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+      <button class="btn btn-primary btn-sm" type="submit">{{ icon('log-out', 14) }} Sign out</button>
+    </form>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns: 220px 1fr; gap: var(--s-5); align-items:flex-start;">
+
+  <aside class="glass-solid glass" style="padding: var(--s-3); position:sticky; top: 96px;">
+    <nav style="display:grid; gap:4px;">
+      {% set items = [
+        ('admin.overview',      'layout-dashboard', 'Overview'),
+        ('admin.slots',         'square-parking',   'Slot manager'),
+        ('admin.desk',          'door-open',        'Entry / Exit desk'),
+        ('admin.bookings',      'calendar',         'Bookings'),
+        ('admin.users',         'user',             'Users'),
+        ('admin.ev',            'zap',              'EV charging'),
+        ('admin.women_safety',  'shield-check',     "Women's Safety"),
+        ('admin.reports',       'bar-chart',        'Reports')
+      ] %}
+      {% for ep, ico, label in items %}
+        <a href="{{ url_for(ep) }}"
+           class="chip"
+           style="justify-content:flex-start; {{ 'background: var(--primary); color:#fff;' if request.endpoint == ep else '' }}"
+           aria-current="{{ 'page' if request.endpoint == ep else 'false' }}">
+          {{ icon(ico, 16) }} {{ label }}
+        </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <section>
+    {% block admin_content %}{% endblock %}
+  </section>
+</div>
+
+<style>@media (max-width: 900px){div[style*="grid-template-columns: 220px 1fr"]{grid-template-columns:1fr !important;} aside[class*="glass"]{position:static !important;}}</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Poll open SOS alerts so the badge updates within a few seconds. */
+(function () {
+  var badge = document.getElementById('sos-counter');
+  var count = document.getElementById('sos-count');
+  if (!badge) return;
+  async function tick() {
+    try {
+      var r = await fetch('/admin/api/sos/open');
+      if (!r.ok) return;
+      var d = await r.json();
+      if (d.count > 0) {
+        badge.style.display = 'inline-flex';
+        count.textContent = d.count;
+        badge.classList.add('badge-sos');
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch (e) { /* ignore */ }
+  }
+  tick();
+  setInterval(tick, 5000);
+})();
+</script>
+{% block admin_scripts %}{% endblock %}
+{% endblock %}

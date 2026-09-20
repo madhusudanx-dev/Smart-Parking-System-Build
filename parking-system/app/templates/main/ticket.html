@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Ticket {{ booking.reference }} · Smart Parking{% endblock %}
+
+{% block head_extra %}
+<style>
+.ticket-qr { width: 200px; height: 200px; display:block; background:#fff; border-radius: 14px; padding: 8px; box-shadow: var(--shadow-soft); }
+@media print { .no-print { display:none !important; } .glass { box-shadow:none !important; border:1px dashed #999 !important; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="row-between no-print" style="margin-bottom: var(--s-4);">
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('main.my_bookings') }}">{{ icon('arrow-left', 15) }} Back to bookings</a>
+  <div style="display:flex; gap:8px;">
+    <button class="btn btn-ghost btn-sm" onclick="window.print()">{{ icon('printer', 15) }} Print ticket</button>
+    {% if booking.status == 'active' %}
+    <button class="btn btn-sos btn-sm" data-sos-open
+            data-booking-id="{{ booking.id }}"
+            data-slot-id="{{ booking.slot_id }}">
+      {{ icon('siren', 15) }} SOS
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+<div class="glass" style="max-width: 720px; margin: 0 auto; padding: var(--s-7);">
+  <div class="row-between" style="align-items:flex-start;">
+    <div>
+      <span class="badge badge-available" style="margin-bottom: var(--s-3);">
+        {{ icon('check-circle-2', 13) }} Confirmed
+      </span>
+      <h1 style="margin-bottom:4px;">Your parking ticket</h1>
+      <p class="muted" style="margin:0;">Booking reference <strong class="tabular">{{ booking.reference }}</strong></p>
+    </div>
+    <img class="ticket-qr" alt="QR code linking to this ticket"
+         src="{{ url_for('main.ticket_qr', booking_id=booking.id) }}" />
+  </div>
+
+  <hr class="divider" style="margin: var(--s-5) 0;" />
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--s-5);">
+    <div>
+      <div class="muted" style="font-size:13px;">Slot</div>
+      <div class="tabular" style="font-size:26px; font-weight:700;">{{ booking.slot_code }}</div>
+      <div class="muted" style="font-size:13px; margin-top:2px;">{{ booking.level_name }}</div>
+    </div>
+    <div>
+      <div class="muted" style="font-size:13px;">Vehicle</div>
+      <div class="tabular" style="font-size:18px; font-weight:600;">{{ booking.vehicle_plate }}</div>
+      <div class="muted" style="font-size:13px; margin-top:2px;">{{ booking.vehicle_type|replace('_',' ')|title }}</div>
+    </div>
+    <div>
+      <div class="muted" style="font-size:13px;">From</div>
+      <div class="tabular" style="font-size:15px;">{{ booking.start_ts|dt }}</div>
+    </div>
+    <div>
+      <div class="muted" style="font-size:13px;">Until</div>
+      <div class="tabular" style="font-size:15px;">{{ booking.end_ts|dt }}</div>
+    </div>
+    <div>
+      <div class="muted" style="font-size:13px;">Amount</div>
+      <div class="tabular" style="font-size:20px; font-weight:700; color:var(--primary);">{{ booking.amount_estimate|inr }}</div>
+      {% if payment %}
+      <div class="muted" style="font-size:12px;">{{ payment.method|upper }} &middot; {{ payment.status }}</div>
+      {% endif %}
+    </div>
+    {% if booking.slot_type == 'ev' %}
+    <div>
+      <div class="muted" style="font-size:13px;">Charger</div>
+      <div style="font-size:15px;">{{ booking.charger_type|upper }} {% if booking.charging_addon %}&middot; charging on{% endif %}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <hr class="divider" style="margin: var(--s-5) 0;" />
+
+  <div class="glass-panel" style="padding: var(--s-4);">
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+      {{ icon('map-pin', 18) }}
+      <div>
+        <strong>How to reach your bay</strong>
+        <p class="muted" style="margin: 4px 0 0;">{{ hint }}</p>
+      </div>
+    </div>
+  </div>
+
+  {% if booking.slot_type == 'women' %}
+  <div class="glass-panel" style="padding: var(--s-4); margin-top: var(--s-4); background: rgba(235,207,247,0.35);">
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+      {{ icon('shield-check', 18) }}
+      <div>
+        <strong>Women&rsquo;s Safety bay</strong>
+        <p class="muted" style="margin:4px 0 0;">
+          This bay sits beside the security cabin, is covered by CCTV, and is well-lit.
+          The SOS button above alerts the desk immediately.
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- SOS confirm sheet -->
+<div class="modal-backdrop" id="sos-modal" role="dialog" aria-modal="true" aria-labelledby="sos-title">
+  <div class="modal">
+    <h2 id="sos-title" style="margin-top:0;">Send an SOS alert?</h2>
+    <p class="muted">
+      Security will see your name, phone and slot within seconds. Use this only if you feel unsafe.
+    </p>
+    <form id="sos-form" action="{{ url_for('main.sos') }}" method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+      <input type="hidden" name="slot_id" id="sos-slot-id" value="{{ booking.slot_id }}" />
+      <input type="hidden" name="booking_id" id="sos-booking-id" value="{{ booking.id }}" />
+      <div class="field">
+        <label for="sos-message">Short note <span class="muted" style="font-weight:400;">(optional)</span></label>
+        <textarea class="textarea" id="sos-message" name="message" maxlength="255"
+                  placeholder="e.g. someone is following me near the lift lobby"></textarea>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn btn-ghost btn-block" onclick="closeModal('sos-modal')">Cancel</button>
+        <button type="button" class="btn btn-sos btn-block" data-sos-send>Send alert</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/sos.js') }}"></script>
+{% endblock %}

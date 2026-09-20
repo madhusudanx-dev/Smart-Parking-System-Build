@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Find my car · Smart Parking{% endblock %}
+
+{% block content %}
+<div class="row-between">
+  <div>
+    <h1>Where is my car?</h1>
+    <p class="muted">A written hint from the entrance, in plain language.</p>
+  </div>
+</div>
+
+{% if booking %}
+<div style="display:grid; grid-template-columns: 1fr 1.2fr; gap: var(--s-6); margin-top: var(--s-5);">
+  <div class="glass" style="padding: var(--s-6);">
+    <span class="badge badge-occupied" style="margin-bottom: var(--s-3);">{{ icon('car', 13) }} In the lot</span>
+    <div class="muted" style="font-size:13px;">Slot</div>
+    <div class="tabular" style="font-size:36px; font-weight:700; color: var(--primary); line-height:1;">{{ booking.slot_code }}</div>
+    <div class="muted" style="margin-top:6px;">{{ booking.level_name }}</div>
+    <hr class="divider" />
+    <div class="muted" style="font-size:13px;">Vehicle</div>
+    <div class="tabular" style="font-size:16px;">{{ booking.vehicle_plate }}</div>
+    <div class="muted" style="font-size:13px; margin-top: var(--s-3);">Parked since</div>
+    <div class="tabular" style="font-size:15px;">{{ booking.start_ts|dt }}</div>
+    {% if booking.note %}<p class="muted" style="margin-top: var(--s-3); font-size:14px;">{{ booking.note }}</p>{% endif %}
+  </div>
+
+  <div class="glass" style="padding: var(--s-6);">
+    <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom: var(--s-4);">
+      {{ icon('map-pin', 22) }}
+      <div>
+        <h2 style="margin:0;">Walking hint</h2>
+        <p class="muted" style="margin:4px 0 0;">{{ hint }}</p>
+      </div>
+    </div>
+
+    <div style="position:relative; border-radius: 20px; overflow:hidden; background: rgba(255,255,255,0.5); padding: var(--s-4);">
+      <svg viewBox="0 0 600 320" style="width:100%; display:block;">
+        <!-- Entrance -->
+        <rect x="10" y="260" width="120" height="46" rx="12"
+              fill="rgba(205,239,224,0.75)" stroke="rgba(30,107,78,0.3)"/>
+        <text x="70" y="288" text-anchor="middle" font-family="Inter" font-size="12"
+              font-weight="600" fill="#1E6B4E">ENTRANCE</text>
+
+        <!-- Path arrow -->
+        <path d="M 80 258 C 80 180, 260 180, 300 180 L 520 180"
+              fill="none" stroke="#0B1057" stroke-width="3"
+              stroke-dasharray="10 8" opacity="0.6"/>
+        <polygon points="520,175 535,180 520,185" fill="#0B1057"/>
+
+        <!-- Your bay -->
+        <rect x="470" y="140" width="90" height="60" rx="12"
+              fill="rgba(203,210,251,0.85)" stroke="#0B1057" stroke-width="2.5"/>
+        <text x="515" y="175" text-anchor="middle" font-family="Inter" font-size="13"
+              font-weight="700" fill="#0B1057">{{ booking.slot_code }}</text>
+      </svg>
+    </div>
+
+    <a class="btn btn-primary btn-block" style="margin-top: var(--s-4);"
+       href="{{ url_for('main.ticket', booking_id=booking.id) }}">
+      {{ icon('ticket', 16) }} Open my ticket
+    </a>
+  </div>
+</div>
+{% else %}
+<div class="glass empty" style="margin-top: var(--s-5);">
+  {{ icon('car', 42) }}
+  <h3>No car parked right now</h3>
+  <p>When your vehicle is inside the lot, we will show its bay and a walking hint here.</p>
+  <a class="btn btn-primary" href="{{ url_for('main.book') }}">Reserve a slot</a>
+</div>
+{% endif %}
+
+<style>@media (max-width: 900px){div[style*="grid-template-columns: 1fr 1.2fr"]{grid-template-columns:1fr !important;}}</style>
+{% endblock %}

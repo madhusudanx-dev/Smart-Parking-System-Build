@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Smart Parking{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+
+    <h1>Welcome Back</h1>
+    <p class="auth-sub">Sign in to your account to continue</p>
+
+    <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input class="input" type="email" id="email" name="email"
+               value="{{ email or '' }}"
+               placeholder="you@example.com"
+               autocomplete="email" autofocus required
+               {% if errors.email %}aria-invalid="true" aria-describedby="email-err"{% endif %} />
+        {% if errors.email %}<div class="field-error" id="email-err">{{ errors.email }}</div>{% endif %}
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input class="input" type="password" id="password" name="password"
+               placeholder="Your password"
+               autocomplete="current-password" required
+               {% if errors.password %}aria-invalid="true" aria-describedby="pw-err"{% endif %} />
+        {% if errors.password %}<div class="field-error" id="pw-err">{{ errors.password }}</div>{% endif %}
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit" style="margin-top: var(--s-2);">
+        Sign In
+      </button>
+    </form>
+
+    <div class="auth-divider">OR CONTINUE WITH</div>
+
+    <div class="social-stack">
+      <button type="button" class="social-btn" data-social="Google">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.31 0-6-2.74-6-6.1s2.69-6.1 6-6.1c1.88 0 3.14.8 3.86 1.48l2.63-2.54C16.82 3.36 14.62 2.4 12 2.4 6.79 2.4 2.6 6.6 2.6 11.8s4.19 9.4 9.4 9.4c5.43 0 9.02-3.81 9.02-9.18 0-.62-.07-1.1-.16-1.57H12z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <button type="button" class="social-btn" data-social="Apple">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#2D3640" d="M16.36 12.6c-.02-2.2 1.79-3.26 1.87-3.31-1.02-1.49-2.6-1.7-3.16-1.72-1.35-.14-2.63.79-3.32.79-.69 0-1.74-.77-2.86-.75-1.47.02-2.83.85-3.58 2.17-1.53 2.65-.39 6.57 1.1 8.72.73 1.05 1.6 2.23 2.74 2.19 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.19-.02 1.94-1.07 2.66-2.13.84-1.22 1.18-2.4 1.2-2.46-.03-.01-2.3-.88-2.35-3.48zM14.3 5.6c.6-.73 1.01-1.75.9-2.76-.87.04-1.93.58-2.55 1.31-.56.64-1.05 1.68-.92 2.67.97.07 1.96-.49 2.57-1.22z"/>
+        </svg>
+        Continue with Apple
+      </button>
+
+      <button type="button" class="social-btn" data-social="Meta">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#0866FF" d="M12 2.4c-5.3 0-9.6 4.3-9.6 9.6s4.3 9.6 9.6 9.6c-.16-1.1-.32-2.55-.42-3.55-.13-1.3-.2-2.28-.2-2.9 0-1.31.22-2.22.66-2.74.44-.52 1.03-.78 1.78-.78.66 0 1.15.22 1.46.65.3.43.42 1.16.35 2.18-.06.79-.22 1.77-.49 2.94-.27 1.16-.44 1.86-.51 2.1-.14.55-.02 1.05.35 1.5.36.45.87.68 1.5.68.85 0 1.57-.34 2.16-1.02.65-.76 1.13-1.87 1.42-3.32.29-1.46.3-2.7.02-3.72-.28-1.02-.79-1.79-1.53-2.31-.72-.52-1.6-.78-2.62-.78-1.36 0-2.45.42-3.28 1.24-.66.66-1.1 1.55-1.3 2.66h-.05c-.29-1.44-.77-2.46-1.44-3.05-.88-.78-2.06-1.17-3.55-1.17-.16 0-.32 0-.48.02-.16.01-.31.02-.46.04.37-.03.72-.05 1.05-.05 2.06 0 3.66.66 4.79 1.97.9 1.04 1.4 2.4 1.5 4.07.15-.05.29-.09.42-.13.52-1.58 1.24-2.8 2.17-3.65 1.11-1.02 2.51-1.53 4.21-1.53 1.66 0 3.02.5 4.07 1.5 1.06 1 1.68 2.42 1.86 4.25.12 1.24-.02 2.37-.43 3.41-.4 1.03-1.02 1.83-1.85 2.4-.84.58-1.87.87-3.08.87-1.02 0-1.86-.26-2.5-.78-.65-.52-1.02-1.24-1.1-2.14-.05-.66.06-1.4.32-2.24.22-.71.35-1.31.4-1.78.06-.47.08-.9.08-1.29 0-.52-.06-.92-.17-1.21-.11-.29-.31-.44-.6-.44-.31 0-.57.17-.76.5-.2.33-.32.8-.38 1.42-.04.42-.06.87-.06 1.36 0 .85.07 1.81.22 2.88.15 1.07.3 2.05.43 2.94h1.66z" opacity=".92"/>
+        </svg>
+        Continue with Meta
+      </button>
+    </div>
+
+    <a class="forgot" href="#" data-social="Password reset">Forgot your password?</a>
+
+    <div class="auth-foot">
+      New here? <a href="{{ url_for('auth.register') }}">Create an account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

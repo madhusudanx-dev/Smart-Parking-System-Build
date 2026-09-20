@@ -1,0 +1,132 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Reports{% endblock %}
+
+{% block admin_content %}
+<h1>Reports</h1>
+<p class="muted">Revenue, occupancy and peak hours for any date range.</p>
+
+<form class="glass" style="padding: var(--s-5); margin-top: var(--s-5); display:flex; gap: var(--s-4); flex-wrap:wrap; align-items:flex-end;"
+      id="report-form">
+  <div class="field" style="flex:1; min-width:160px; margin-bottom:0;">
+    <label for="start">From</label>
+    <input class="input" type="date" id="start" name="start" required />
+  </div>
+  <div class="field" style="flex:1; min-width:160px; margin-bottom:0;">
+    <label for="end">To</label>
+    <input class="input" type="date" id="end" name="end" required />
+  </div>
+  <button type="submit" class="btn btn-primary">{{ icon('bar-chart', 16) }} Run report</button>
+  <button type="button" class="btn btn-ghost" onclick="window.print()">{{ icon('printer', 16) }} Print</button>
+  <button type="button" class="btn btn-ghost" id="csv-btn">{{ icon('download', 16) }} CSV</button>
+</form>
+
+<div style="display:grid; grid-template-columns: 1.4fr 1fr; gap: var(--s-5); margin-top: var(--s-5);">
+  <div class="glass" style="padding: var(--s-5);">
+    <h2 style="margin-top:0;">Revenue per day</h2>
+    <canvas id="revChart" height="160" aria-label="Daily revenue chart"></canvas>
+  </div>
+  <div class="glass" style="padding: var(--s-5);">
+    <h2 style="margin-top:0;">Peak hours</h2>
+    <div id="peak-list" class="stack-sm">
+      <span class="skeleton" style="width:80%"></span>
+      <span class="skeleton" style="width:60%"></span>
+    </div>
+  </div>
+</div>
+
+<div class="table-wrap" style="margin-top: var(--s-5);">
+  <table class="table" id="report-table">
+    <thead><tr><th>Date</th><th>Revenue</th><th>Transactions</th></tr></thead>
+    <tbody>
+      <tr><td colspan="3" class="table-empty">Pick a date range and click <em>Run report</em>.</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var chart = null;
+  var form = document.getElementById('report-form');
+  var csvBtn = document.getElementById('csv-btn');
+
+  function fmtINR(n) { return window.formatINR(n); }
+
+  async function run(e) {
+    if (e) e.preventDefault();
+    var start = document.getElementById('start').value;
+    var end = document.getElementById('end').value;
+    if (!start || !end) return;
+    var r = await fetch('/admin/reports/data?start=' + start + '&end=' + end);
+    if (!r.ok) { window.toast('Could not load report.', 'err'); return; }
+    var d = await r.json();
+
+    // Chart
+    var ctx = document.getElementById('revChart');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: d.series.map(function (x) { return x.date; }),
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: d.series.map(function (x) { return x.revenue; }),
+          backgroundColor: 'rgba(111,123,242,0.55)',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display:false }, ticks: { color:'#6B7280' } },
+          y: { grid: { color:'rgba(45,54,64,0.06)' }, ticks: { color:'#6B7280' } }
+        }
+      }
+    });
+
+    // Peak list
+    var peakEl = document.getElementById('peak-list');
+    if (d.peak.length) {
+      peakEl.innerHTML = d.peak.map(function (p) {
+        return '<div class="row-between" style="font-size:14px;">' +
+               '<span class="muted">' + String(p.hour).padStart(2,'0') + ':00 – ' +
+               String(p.hour+1).padStart(2,'0') + ':00</span>' +
+               '<strong class="tabular">' + p.count + ' entries</strong></div>';
+      }).join('');
+    } else {
+      peakEl.innerHTML = '<p class="muted">No sessions in this range.</p>';
+    }
+
+    // Table
+    var tbody = document.querySelector('#report-table tbody');
+    if (d.series.length) {
+      tbody.innerHTML = d.series.map(function (x) {
+        return '<tr><td>' + x.date + '</td><td class="tabular">' + fmtINR(x.revenue) +
+               '</td><td class="tabular">' + x.txn + '</td></tr>';
+      }).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No data for this range.</td></tr>';
+    }
+  }
+
+  form.addEventListener('submit', run);
+
+  csvBtn.addEventListener('click', function () {
+    var start = document.getElementById('start').value;
+    var end = document.getElementById('end').value;
+    if (!start || !end) { window.toast('Pick a date range first.', 'info'); return; }
+    window.location = '/admin/reports.csv?start=' + start + '&end=' + end;
+  });
+
+  // Default range: last 7 days
+  var today = new Date();
+  var weekAgo = new Date(today.getTime() - 6 * 86400000);
+  function iso(d) { return d.toISOString().slice(0, 10); }
+  document.getElementById('start').value = iso(weekAgo);
+  document.getElementById('end').value = iso(today);
+})();
+</script>
+{% endblock %}

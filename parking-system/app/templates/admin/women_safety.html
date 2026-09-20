@@ -1,0 +1,66 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Women's Safety zone{% endblock %}
+
+{% block admin_content %}
+<h1>Women&rsquo;s Safety zone</h1>
+<p class="muted">Bays near the entrance, cabin and CCTV. Live SOS feed below.</p>
+
+<h2 style="margin-top: var(--s-5);">Monitored bays</h2>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Bay</th><th>Level</th><th>Status</th><th>Note</th></tr></thead>
+    <tbody>
+      {% for b in bays %}
+        <tr>
+          <td><strong>{{ b.code }}</strong></td>
+          <td class="muted">{{ b.level_code }}</td>
+          <td>
+            {% if b.status == 'available' %}<span class="badge badge-women">Free</span>
+            {% elif b.status == 'occupied' %}<span class="badge badge-occupied">Occupied</span>
+            {% else %}<span class="badge badge-disabled">{{ b.status|title }}</span>{% endif %}
+          </td>
+          <td class="muted">{{ b.note or '—' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 style="margin-top: var(--s-7);">SOS alerts</h2>
+{% if alerts %}
+  <div style="display:grid; gap: var(--s-3);">
+    {% for a in alerts %}
+      <div class="glass {{ 'glass-strong' if a.status == 'open' else '' }}"
+           style="padding: var(--s-5); {{ 'border-left: 4px solid var(--sos);' if a.status == 'open' else '' }}">
+        <div class="row-between">
+          <div>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:6px;">
+              {% if a.status == 'open' %}<span class="badge badge-sos">{{ icon('siren', 13) }} Open</span>
+              {% else %}<span class="badge badge-available">Resolved</span>{% endif %}
+              <span class="muted" style="font-size:13px;">{{ a.created_at|dt }}</span>
+            </div>
+            <strong>{{ a.user_name }}</strong>
+            {% if a.phone %}<span class="muted tabular">&middot; {{ a.phone }}</span>{% endif %}
+            <span class="muted">&middot; Slot {{ a.slot_code or '—' }}</span>
+            {% if a.message %}<p class="muted" style="margin: 6px 0 0;">&ldquo;{{ a.message }}&rdquo;</p>{% endif %}
+          </div>
+          {% if a.status == 'open' %}
+            <form method="post" action="{{ url_for('admin.sos_resolve', aid=a.id) }}">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+              <button class="btn btn-primary btn-sm" type="submit">{{ icon('check', 14) }} Mark resolved</button>
+            </form>
+          {% else %}
+            <span class="muted" style="font-size:13px;">Resolved {{ a.resolved_at|dt }}</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="glass empty">
+    <h3>No alerts — all quiet</h3>
+    <p>When a driver presses SOS, it appears here within seconds.</p>
+  </div>
+{% endif %}
+{% endblock %}

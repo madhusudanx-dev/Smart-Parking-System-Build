@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Create your account · Smart Parking{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+
+    <h1>Create your account</h1>
+    <p class="auth-sub">It takes less than a minute, and your first booking is on us to try.</p>
+
+    <form method="post" action="{{ url_for('auth.register') }}" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+
+      <div class="field">
+        <label for="name">Full Name</label>
+        <input class="input" type="text" id="name" name="name"
+               value="{{ form.name or '' }}"
+               placeholder="Aarthi Nair"
+               autocomplete="name" autofocus required
+               {% if errors.name %}aria-invalid="true" aria-describedby="name-err"{% endif %} />
+        {% if errors.name %}<div class="field-error" id="name-err">{{ errors.name }}</div>{% endif %}
+      </div>
+
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input class="input" type="email" id="email" name="email"
+               value="{{ form.email or '' }}"
+               placeholder="you@example.com"
+               autocomplete="email" required
+               {% if errors.email %}aria-invalid="true" aria-describedby="email-err"{% endif %} />
+        {% if errors.email %}<div class="field-error" id="email-err">{{ errors.email }}</div>{% endif %}
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone <span class="muted" style="font-weight:400;">(optional)</span></label>
+        <input class="input" type="tel" id="phone" name="phone"
+               value="{{ form.phone or '' }}"
+               placeholder="+91 98450 00000"
+               autocomplete="tel"
+               {% if errors.phone %}aria-invalid="true" aria-describedby="phone-err"{% endif %} />
+        {% if errors.phone %}<div class="field-error" id="phone-err">{{ errors.phone }}</div>{% endif %}
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="password">Password</label>
+          <input class="input" type="password" id="password" name="password"
+                 placeholder="At least 8 characters"
+                 autocomplete="new-password" required
+                 {% if errors.password %}aria-invalid="true" aria-describedby="pw-err"{% endif %} />
+          {% if errors.password %}<div class="field-error" id="pw-err">{{ errors.password }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label for="password_confirm">Confirm Password</label>
+          <input class="input" type="password" id="password_confirm" name="password_confirm"
+                 placeholder="Repeat password"
+                 autocomplete="new-password" required
+                 {% if errors.password_confirm %}aria-invalid="true" aria-describedby="pwc-err"{% endif %} />
+          {% if errors.password_confirm %}<div class="field-error" id="pwc-err">{{ errors.password_confirm }}</div>{% endif %}
+        </div>
+      </div>
+
+      <label class="check" style="margin: var(--s-3) 0 var(--s-4);">
+        <input type="checkbox" name="wants_women" value="1"
+               {% if form.wants_women %}checked{% endif %} />
+        <span>
+          I would like access to Women's Safety slots
+          <span class="hint" style="margin-top:2px;">
+            Self-declared. Reserved bays sit near the entrance, security cabin
+            and CCTV coverage, with an SOS button on the ticket.
+          </span>
+        </span>
+      </label>
+
+      <button class="btn btn-primary btn-block" type="submit">
+        Create Account
+      </button>
+    </form>
+
+    <div class="auth-divider">OR CONTINUE WITH</div>
+
+    <div class="social-stack">
+      <button type="button" class="social-btn" data-social="Google">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.66 4.1-5.5 4.1-3.31 0-6-2.74-6-6.1s2.69-6.1 6-6.1c1.88 0 3.14.8 3.86 1.48l2.63-2.54C16.82 3.36 14.62 2.4 12 2.4 6.79 2.4 2.6 6.6 2.6 11.8s4.19 9.4 9.4 9.4c5.43 0 9.02-3.81 9.02-9.18 0-.62-.07-1.1-.16-1.57H12z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <button type="button" class="social-btn" data-social="Apple">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#2D3640" d="M16.36 12.6c-.02-2.2 1.79-3.26 1.87-3.31-1.02-1.49-2.6-1.7-3.16-1.72-1.35-.14-2.63.79-3.32.79-.69 0-1.74-.77-2.86-.75-1.47.02-2.83.85-3.58 2.17-1.53 2.65-.39 6.57 1.1 8.72.73 1.05 1.6 2.23 2.74 2.19 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.19-.02 1.94-1.07 2.66-2.13.84-1.22 1.18-2.4 1.2-2.46-.03-.01-2.3-.88-2.35-3.48zM14.3 5.6c.6-.73 1.01-1.75.9-2.76-.87.04-1.93.58-2.55 1.31-.56.64-1.05 1.68-.92 2.67.97.07 1.96-.49 2.57-1.22z"/>
+        </svg>
+        Continue with Apple
+      </button>
+      <button type="button" class="social-btn" data-social="Meta">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9.6" fill="#0866FF"/>
+          <path fill="#fff" d="M16.5 9.5c-.4-.5-1-.8-1.7-.8-1 0-1.8.7-2.4 1.7-.6-.4-1.2-.6-1.9-.6-1.6 0-2.9 1.4-2.9 3.1 0 1.7 1.3 3.1 2.9 3.1.7 0 1.3-.2 1.9-.6.6 1 1.4 1.7 2.4 1.7.7 0 1.3-.3 1.7-.8.4-.5.6-1.2.6-2s-.2-1.5-.6-2c0 0 0-.8 0-.8z"/>
+        </svg>
+        Continue with Meta
+      </button>
+    </div>
+
+    <div class="auth-foot">
+      Already registered? <a href="{{ url_for('auth.login') }}">Sign in instead</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

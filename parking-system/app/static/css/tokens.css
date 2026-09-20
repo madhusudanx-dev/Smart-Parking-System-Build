@@ -1,0 +1,94 @@
+/* ===========================================================================
+   Design tokens - the single source of truth for colour, type, spacing,
+   radii, shadows and motion.  No page should hard-code a hex value; if you
+   need a new one, add it here first.
+   =========================================================================== */
+
+:root {
+  /* ---- base surfaces ------------------------------------------------ */
+  --bg:              #F4F6F5;
+  --surface-soft:    rgba(255, 255, 255, 0.35);   /* default glass        */
+  --surface-solid:   rgba(255, 255, 255, 0.60);   /* data-heavy glass     */
+  --surface-strong:  rgba(255, 255, 255, 0.85);   /* fallback + modals    */
+  --surface-fallback: rgba(255, 255, 255, 0.85);  /* no backdrop-filter   */
+
+  /* ---- ink ---------------------------------------------------------- */
+  --ink:      #2D3640;
+  --muted:    #6B7280;
+  --hairline: rgba(255, 255, 255, 0.70);
+
+  /* ---- primary (deep navy) ----------------------------------------- */
+  --primary:        #0B1057;
+  --primary-hover:  #151C78;
+  --primary-text:   #FFFFFF;
+  --primary-ring:   rgba(11, 16, 87, 0.12);
+
+  /* ---- background blobs -------------------------------------------- */
+  --blob-indigo:    #6F7BF2;
+  --blob-periwinkle:#8F9CFF;
+  --blob-orchid:    #F7B6F2;
+  --blob-lavender:  #D8CCFA;
+
+  /* ---- slot states (pastel glass tints + darker text of same hue) -- */
+  --slot-available-bg:   #CDEFE0;  --slot-available-ink:   #1E6B4E;
+  --slot-occupied-bg:    #F9CBD6;  --slot-occupied-ink:    #8A2E4A;
+  --slot-reserved-bg:    #CBD2FB;  --slot-reserved-ink:    #2E3A9C;
+  --slot-ev-bg:          #FBEBB8;  --slot-ev-ink:          #7A5B0E;
+  --slot-women-bg:       #EBCFF7;  --slot-women-ink:       #6B2A8A;
+  --slot-disabled-bg:    #E4E6E9;  --slot-disabled-ink:    #5A616B;
+
+  /* ---- alert ------------------------------------------------------- */
+  --sos:        #E5484D;
+  --sos-hover:  #C93A3E;
+  --sos-soft:   rgba(229, 72, 77, 0.10);
+
+  /* ---- shadows ------------------------------------------------------ */
+  --shadow-card:  0 24px 60px rgba(95, 90, 180, 0.16),
+                  0 2px 8px  rgba(40, 40, 80, 0.05);
+  --shadow-soft:  0 12px 32px rgba(95, 90, 180, 0.12),
+                  0 1px 4px  rgba(40, 40, 80, 0.05);
+  --shadow-navy:  0 8px 20px rgba(11, 16, 87, 0.25);
+  --highlight:    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+
+  /* ---- radii -------------------------------------------------------- */
+  --r-card:    28px;
+  --r-btn:     18px;
+  --r-input:   16px;
+  --r-slot:    12px;
+  --r-pill:    999px;
+  --r-nav:     20px;
+
+  /* ---- spacing (8px scale) ----------------------------------------- */
+  --s-1: 4px;   --s-2: 8px;   --s-3: 12px; --s-4: 16px;
+  --s-5: 24px;  --s-6: 32px;  --s-7: 40px; --s-8: 56px; --s-9: 72px;
+
+  /* ---- type --------------------------------------------------------- */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+  --t-display: 36px;   /* auth titles                */
+  --t-h1:      28px;   /* app page titles            */
+  --t-h2:      20px;
+  --t-h3:      17px;
+  --t-body:    16px;
+  --t-label:   15px;
+  --t-small:   13px;
+
+  /* ---- motion ------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast:   150ms;
+  --t-base:   220ms;
+}
+
+/* Respect the user's reduced-motion preference everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t-base: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

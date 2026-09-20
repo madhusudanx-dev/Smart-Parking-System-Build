@@ -1,0 +1,73 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon %}
+{% block title %}Entry / exit desk{% endblock %}
+
+{% block admin_content %}
+<h1>Entry / exit desk</h1>
+<p class="muted">Mark vehicles in and out. Fees are rounded up to the next hour with a 1-hour minimum.</p>
+
+<div class="glass" style="padding: var(--s-6); margin-top: var(--s-5);">
+  <h2 style="margin-top:0;">Log a vehicle entry</h2>
+  <form method="post" action="{{ url_for('admin.desk_entry') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+    <div class="form-row">
+      <div class="field">
+        <label for="plate">Number plate</label>
+        <input class="input" id="plate" name="plate" placeholder="KA-01-AB-1234" required />
+      </div>
+      <div class="field">
+        <label for="slot_code">Slot code</label>
+        <input class="input" id="slot_code" name="slot_code" placeholder="G-07" required />
+      </div>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('log-in', 16) }} Log entry</button>
+  </form>
+</div>
+
+<h2 style="margin-top: var(--s-7);">Currently inside</h2>
+{% if inside %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Plate</th><th>Slot</th><th>Entered</th><th></th></tr></thead>
+      <tbody>
+        {% for s in inside %}
+          <tr>
+            <td class="tabular"><strong>{{ s.vehicle_plate }}</strong></td>
+            <td>{{ s.slot_code }} <span class="muted">&middot; {{ s.level_code }}</span></td>
+            <td class="tabular muted">{{ s.entry_ts|dt }}</td>
+            <td style="text-align:right;">
+              <form method="post" action="{{ url_for('admin.desk_exit', sid=s.id) }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+                <button class="btn btn-primary btn-sm" type="submit">{{ icon('log-out', 14) }} Mark exit</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="glass empty"><h3>Nothing inside</h3><p>The lot is empty right now.</p></div>
+{% endif %}
+
+<h2 style="margin-top: var(--s-7);">Recent exits</h2>
+{% if recent %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Plate</th><th>Slot</th><th>In</th><th>Out</th><th>Hours</th><th>Amount</th></tr></thead>
+      <tbody>
+        {% for s in recent %}
+          <tr>
+            <td class="tabular">{{ s.vehicle_plate }}</td>
+            <td>{{ s.slot_code }}</td>
+            <td class="tabular muted">{{ s.entry_ts|dt("%d %b, %I:%M %p") }}</td>
+            <td class="tabular muted">{{ s.exit_ts|dt("%d %b, %I:%M %p") }}</td>
+            <td class="tabular">{{ s.billed_hours }}</td>
+            <td class="tabular">{{ s.amount|inr }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "admin/_layout.html" %}
+{% from "macros.html" import icon, slot_badge, slot_type_badge %}
+{% block title %}Slot manager{% endblock %}
+
+{% block admin_content %}
+<div class="row-between">
+  <div>
+    <h1>Slot manager</h1>
+    <p class="muted">Add, edit, disable or remove parking bays.</p>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('slot-form').scrollIntoView({behavior:'smooth'})">
+    {{ icon('plus', 16) }} Add slot
+  </button>
+</div>
+
+<div class="table-wrap" style="margin-top: var(--s-5);">
+  <table class="table">
+    <thead>
+      <tr><th>Code</th><th>Level</th><th>Type</th><th>Vehicle</th><th>Position</th><th>Status</th><th>Active</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in slots %}
+        <tr>
+          <td><strong>{{ s.code }}</strong></td>
+          <td class="muted">{{ s.level_code }}</td>
+          <td>{{ slot_type_badge(s.slot_type) }}</td>
+          <td class="muted">{{ s.vehicle_type }}</td>
+          <td class="tabular muted">{{ s.pos_x }}, {{ s.pos_y }}</td>
+          <td>{{ slot_badge(s.status) }}</td>
+          <td>
+            {% if s.is_active %}<span class="badge badge-available">Active</span>
+            {% else %}<span class="badge badge-disabled">Disabled</span>{% endif %}
+          </td>
+          <td style="text-align:right; display:flex; gap:8px; justify-content:flex-end;">
+            <form method="post" action="{{ url_for('admin.slot_toggle', sid=s.id) }}">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+              <button class="btn btn-ghost btn-sm" type="submit" aria-label="Toggle active">
+                {{ icon('refresh-cw', 14) }}
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('admin.slot_delete', sid=s.id) }}"
+                  onsubmit="return confirm('Remove slot {{ s.code }}? This cannot be undone.');">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+              <button class="btn btn-ghost btn-sm" type="submit" aria-label="Delete slot" style="color:#B22328;">
+                {{ icon('trash-2', 14) }}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="glass" id="slot-form" style="padding: var(--s-6); margin-top: var(--s-6);">
+  <h2 style="margin-top:0;">Add a new slot</h2>
+  <form method="post" action="{{ url_for('admin.slots') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+    <div class="form-row">
+      <div class="field">
+        <label for="level_id">Level</label>
+        <select class="select" id="level_id" name="level_id" required>
+          {% for l in levels %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="code">Slot code</label>
+        <input class="input" id="code" name="code" placeholder="G-25" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="slot_type">Slot type</label>
+        <select class="select" id="slot_type" name="slot_type">
+          <option value="standard">Standard</option>
+          <option value="ev">EV Charging</option>
+          <option value="women">Women's Safety</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="vehicle_type">Vehicle type</label>
+        <select class="select" id="vehicle_type" name="vehicle_type">
+          <option value="car">Car</option>
+          <option value="bike">Bike</option>
+          <option value="ev_car">EV Car</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="pos_x">Map X</label>
+        <input class="input" id="pos_x" name="pos_x" type="number" value="200" />
+      </div>
+      <div class="field">
+        <label for="pos_y">Map Y</label>
+        <input class="input" id="pos_y" name="pos_y" type="number" value="130" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="note">Note <span class="muted" style="font-weight:400;">(optional)</span></label>
+      <input class="input" id="note" name="note" placeholder="e.g. near the lift lobby" />
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('plus', 16) }} Add slot</button>
+  </form>
+</div>
+{% endblock %}

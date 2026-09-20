@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% from "macros.html" import icon %}
+{% from "main/_floorplan.html" import floorplan %}
+{% block title %}Reserve a slot · Smart Parking{% endblock %}
+{% block blob_intensity %}subtle{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/floorplan.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+<h1>Reserve a slot</h1>
+<p class="muted" style="max-width: 62ch;">
+  Tap a green bay on the map, choose your hours, and confirm. Your spot is held
+  until you finish the payment step.
+</p>
+
+<div style="display:grid; grid-template-columns: 1.4fr 0.9fr; gap: var(--s-6); margin-top: var(--s-5);">
+  <section>
+    {{ floorplan(levels, interactive=true, show_filters=true, live=true) }}
+  </section>
+
+  <aside class="glass" id="booking-panel" style="padding: var(--s-6); position:sticky; top: 96px; align-self:start;">
+    <h2 style="margin-top:0;">Your booking</h2>
+
+    <div id="slot-summary" class="glass-panel" style="padding: var(--s-4); margin-bottom: var(--s-5);">
+      <div class="muted" style="font-size:13px;">Selected slot</div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px;">
+        <div id="slot-code" class="tabular" style="font-size:22px; font-weight:700; color: var(--primary);">None yet</div>
+        <span id="slot-type-badge" class="badge">—</span>
+      </div>
+      <div id="slot-hint" class="muted" style="font-size:13px; margin-top:6px;">
+        Tap a green bay on the map to begin.
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('main.book_post') }}" id="booking-form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}" />
+      <input type="hidden" name="slot_id" id="field-slot-id" value="" />
+
+      <div class="field">
+        <label for="vehicle_type">Vehicle type</label>
+        <select class="select" id="vehicle_type" name="vehicle_type" required>
+          <option value="car">Car</option>
+          <option value="bike">Bike</option>
+          <option value="scooter">Scooter</option>
+          <option value="ev_car">EV Car</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="vehicle_plate">Vehicle number</label>
+        <input class="input" id="vehicle_plate" name="vehicle_plate"
+               placeholder="KA-01-AB-1234" required
+               pattern="[A-Za-z0-9\- ]{6,16}" />
+        <span class="hint">Indian format, e.g. KA-01-AB-1234</span>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="start_ts">From</label>
+          <input class="input" type="datetime-local" id="start_ts" name="start_ts" required />
+        </div>
+        <div class="field">
+          <label for="end_ts">Until</label>
+          <input class="input" type="datetime-local" id="end_ts" name="end_ts" required />
+        </div>
+      </div>
+
+      <!-- EV-only options shown when an EV bay is selected -->
+      <div id="ev-options" class="hidden" style="margin-bottom: var(--s-4);">
+        <div class="field">
+          <label for="charger_type">Charger type</label>
+          <select class="select" id="charger_type" name="charger_type">
+            <option value="ac">AC &mdash; slower, cheaper</option>
+            <option value="dc">DC &mdash; fast charge</option>
+          </select>
+        </div>
+        <label class="check">
+          <input type="checkbox" name="charging_addon" id="charging_addon" value="1" />
+          <span>Add charging to this booking <span class="muted">(₹12/hr extra)</span></span>
+        </label>
+      </div>
+
+      <div class="glass-panel" style="padding: var(--s-4); margin: var(--s-4) 0;">
+        <div class="row-between" style="font-size:14px;">
+          <span class="muted">Duration</span>
+          <span id="fee-hours" class="tabular">— </span>
+        </div>
+        <div class="row-between" style="font-size:14px; margin-top:6px;">
+          <span class="muted">Base</span>
+          <span id="fee-base" class="tabular">₹0.00</span>
+        </div>
+        <div class="row-between" style="font-size:14px; margin-top:6px;">
+          <span class="muted">Charging add-on</span>
+          <span id="fee-extra" class="tabular">₹0.00</span>
+        </div>
+        <hr class="divider" />
+        <div class="row-between">
+          <strong>Estimated total</strong>
+          <strong id="fee-total" class="tabular" style="font-size:20px; color:var(--primary);">₹0.00</strong>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit" id="book-submit" disabled>
+        Continue to payment
+      </button>
+    </form>
+  </aside>
+</div>
+
+<style>
+@media (max-width: 1000px) {
+  div[style*="grid-template-columns: 1.4fr 0.9fr"] { grid-template-columns: 1fr !important; }
+  #booking-panel { position: static !important; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/floorplan.js') }}"></script>
+<script>
+(function () {
+  var form           = document.getElementById('booking-form');
+  var fieldSlotId    = document.getElementById('field-slot-id');
+  var slotCodeEl     = document.getElementById('slot-code');
+  var slotBadgeEl    = document.getElementById('slot-type-badge');
+  var slotHintEl     = document.getElementById('slot-hint');
+  var evOptions      = document.getElementById('ev-options');
+  var submitBtn      = document.getElementById('book-submit');
+
+  var vType          = document.getElementById('vehicle_type');
+  var startEl        = document.getElementById('start_ts');
+  var endEl          = document.getElementById('end_ts');
+  var chargingBox    = document.getElementById('charging_addon');
+
+  // Defaults: now rounded to next 15 min, and +2 hours.
+  var now = new Date();
+  now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15, 0, 0);
+  var later = new Date(now.getTime() + 2 * 3600 * 1000);
+  function toLocalInput(d) {
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+         + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  startEl.value = toLocalInput(now);
+  endEl.value   = toLocalInput(later);
+  startEl.min   = toLocalInput(new Date());
+
+  // Slot selection from the map.
+  document.addEventListener('slot:selected', function (e) {
+    var s = e.detail;
+    fieldSlotId.value = s.id;
+    slotCodeEl.textContent = s.code;
+    slotHintEl.textContent = s.note || 'Level ' + s.level + ' · ' + s.vehicle_type;
+    slotBadgeEl.className = 'badge ' + (
+      s.slot_type === 'ev' ? 'badge-ev' :
+      s.slot_type === 'women' ? 'badge-women' : '');
+    slotBadgeEl.textContent =
+      s.slot_type === 'ev' ? 'EV Charging' :
+      s.slot_type === 'women' ? "Women's Safety" : 'Standard';
+
+    if (s.slot_type === 'ev') {
+      evOptions.classList.remove('hidden');
+      vType.value = 'ev_car';
+    } else {
+      evOptions.classList.add('hidden');
+    }
+    refreshFee();
+  });
+
+  // Recalculate the fee through the API.
+  async function refreshFee() {
+    if (!fieldSlotId.value) return;
+    var payload = {
+      start_ts: startEl.value,
+      end_ts: endEl.value,
+      vehicle_type: vType.value,
+      charging: chargingBox && chargingBox.checked
+    };
+    try {
+      var r = await fetch('/api/fee-estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) return;
+      var d = await r.json();
+      document.getElementById('fee-hours').textContent = d.hours + ' hour' + (d.hours === 1 ? '' : 's');
+      document.getElementById('fee-base').textContent  = window.formatINR(d.base);
+      document.getElementById('fee-extra').textContent = window.formatINR(d.extra);
+      document.getElementById('fee-total').textContent = window.formatINR(d.total);
+      submitBtn.disabled = !fieldSlotId.value;
+    } catch (e) { /* ignore */ }
+  }
+
+  ['change', 'input'].forEach(function (ev) {
+    vType.addEventListener(ev, refreshFee);
+    startEl.addEventListener(ev, refreshFee);
+    endEl.addEventListener(ev, refreshFee);
+    if (chargingBox) chargingBox.addEventListener(ev, refreshFee);
+  });
+})();
+</script>
+{% endblock %}
